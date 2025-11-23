@@ -68,6 +68,7 @@ Handles all camera-related functionality:
 
 - **Scanner**: Discovers IP cameras on the network
 - **RTSP Client**: Connects to cameras using RTSP protocol
+- **Connection Pool**: Manages pooled connections to RTSP cameras
 - **Capture**: Extracts images from RTSP streams
 
 ### Network Scanning (`internal/network`)
