@@ -1,0 +1,31 @@
+# Network configuration
+network:
+  # CIDR notation for network scanning
+  cidr: "127.0.0.1/32"
+  # Timeout in seconds for network operations
+  timeout: 5
+  # Number of concurrent workers for scanning
+  workers: 10
+
+# RTSP configuration
+rtsp:
+  # Default username for RTSP authentication
+  username: "admin"
+  # Default password for RTSP authentication
+  password: "password"
+  # Timeout in seconds for RTSP operations
+  timeout: 30
+
+# Telegram configuration
+telegram:
+  # Telegram bot token (get from @BotFather)
+  bot_token: "YOUR_BOT_TOKEN_HERE"
+  # Chat ID to send messages to
+  chat_id: "YOUR_CHAT_ID_HERE"
+
+# Scan configuration
+scan:
+  # Interval between scans in minutes
+  interval: 30
+  # Maximum number of cameras to process concurrently
+  max_concurrent: 3

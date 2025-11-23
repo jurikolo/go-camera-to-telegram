@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/jurikolo/go-camera-to-telegram/internal/camera"
 	"github.com/jurikolo/go-camera-to-telegram/internal/config"
@@ -12,8 +13,25 @@ import (
 func main() {
 	fmt.Println("Camera Scanner Example")
 
+	// Check for config flag
+	configPath := ""
+	for i, arg := range os.Args {
+		if arg == "--config" && i+1 < len(os.Args) {
+			configPath = os.Args[i+1]
+			break
+		}
+	}
+
 	// Load configuration
-	cfg, err := config.Load()
+	var cfg *config.Config
+	var err error
+	if configPath != "" {
+		fmt.Printf("Using config file: %s\n", configPath)
+		cfg, err = config.LoadWithFile(configPath)
+	} else {
+		cfg, err = config.Load()
+	}
+	
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
@@ -21,7 +39,7 @@ func main() {
 	fmt.Printf("Scanning network: %s\n", cfg.Network.CIDR)
 
 	// Create camera scanner
-	scanner := camera.NewScanner()
+	scanner := camera.NewScanner(cfg)
 
 	// Scan for cameras
 	cameras, err := scanner.ScanNetwork()

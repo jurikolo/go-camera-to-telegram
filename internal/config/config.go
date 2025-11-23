@@ -45,10 +45,19 @@ type ScanConfig struct {
 
 // Load loads configuration from file and environment variables
 func Load() (*Config, error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./configs")
-	viper.AddConfigPath(".")
+	return LoadWithFile("")
+}
+
+// LoadWithFile loads configuration from a specific file and environment variables
+func LoadWithFile(configPath string) (*Config, error) {
+	if configPath != "" {
+		viper.SetConfigFile(configPath)
+	} else {
+		viper.SetConfigName("config")
+		viper.SetConfigType("yaml")
+		viper.AddConfigPath("./configs")
+		viper.AddConfigPath(".")
+	}
 	
 	// Set environment variable prefix and enable automatic environment variable binding
 	viper.SetEnvPrefix("CTT") // CTT = Camera To Telegram
