@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -170,4 +171,126 @@ func incIP(ip net.IP) {
 			break
 		}
 	}
+}
+
+// VerifyRTSP verifies that a host is running an RTSP service on port 554
+// It performs a more thorough check than just port scanning by sending an RTSP OPTIONS request
+func (s *Scanner) VerifyRTSP(ctx context.Context, host string) (bool, error) {
+	return s.verifyRTSPWithRetry(ctx, host, 3, time.Second)
+}
+
+// verifyRTSPWithRetry performs RTSP verification with exponential backoff retry logic
+func (s *Scanner) verifyRTSPWithRetry(ctx context.Context, host string, maxRetries int, initialDelay time.Duration) (bool, error) {
+	delay := initialDelay
+	
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		// Check if context is cancelled
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err()
+		default:
+		}
+		
+		// Try to verify RTSP
+		valid, err := s.verifyRTSP(ctx, host)
+		if err == nil && valid {
+			return true, nil
+		}
+		
+		// If this was the last attempt, return the error
+		if attempt == maxRetries {
+			if err != nil {
+				return false, fmt.Errorf("RTSP verification failed after %d attempts: %w", maxRetries+1, err)
+			}
+			return false, nil
+		}
+		
+		// Wait before retrying with exponential backoff
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err()
+		case <-time.After(delay):
+			// Exponential backoff: double the delay for next attempt
+			delay *= 2
+		}
+	}
+	
+	return false, nil
+}
+
+// verifyRTSP performs the actual RTSP verification by sending an OPTIONS request
+func (s *Scanner) verifyRTSP(ctx context.Context, host string) (bool, error) {
+	// Create a context with timeout
+	timeoutCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+	
+	// Attempt to establish a connection to port 554
+	conn, err := (&net.Dialer{}).DialContext(timeoutCtx, "tcp", net.JoinHostPort(host, "554"))
+	if err != nil {
+		return false, fmt.Errorf("failed to connect to RTSP port: %w", err)
+	}
+	defer conn.Close()
+	
+	// Send RTSP OPTIONS request
+	optionsRequest := fmt.Sprintf("OPTIONS rtsp://%s:554/ RTSP/1.0\r\n"+
+		"CSeq: 1\r\n"+
+		"User-Agent: GoCameraToTelegram/1.0\r\n"+
+		"\r\n", host)
+	
+	// Set write deadline
+	if err := conn.SetWriteDeadline(time.Now().Add(s.timeout)); err != nil {
+		return false, fmt.Errorf("failed to set write deadline: %w", err)
+	}
+	
+	// Send the request
+	if _, err := conn.Write([]byte(optionsRequest)); err != nil {
+		return false, fmt.Errorf("failed to send OPTIONS request: %w", err)
+	}
+	
+	// Set read deadline
+	if err := conn.SetReadDeadline(time.Now().Add(s.timeout)); err != nil {
+		return false, fmt.Errorf("failed to set read deadline: %w", err)
+	}
+	
+	// Read the response
+	buffer := make([]byte, 4096)
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return false, fmt.Errorf("failed to read RTSP response: %w", err)
+	}
+	
+	// Parse the response
+	response := string(buffer[:n])
+	
+	// Check if it looks like a valid RTSP response
+	// RTSP responses typically start with "RTSP/1.0" and include a status code
+	if !s.isValidRTSPResponse(response) {
+		return false, fmt.Errorf("invalid RTSP response received")
+	}
+	
+	return true, nil
+}
+
+// isValidRTSPResponse checks if the response looks like a valid RTSP response
+func (s *Scanner) isValidRTSPResponse(response string) bool {
+	// Check if it starts with RTSP/1.0
+	if !strings.HasPrefix(response, "RTSP/1.0") {
+		return false
+	}
+	
+	// Check if it contains a valid status code (200, 401, 403, etc.)
+	// Common RTSP status codes:
+	// 200 OK
+	// 401 Unauthorized
+	// 403 Forbidden
+	// 404 Not Found
+	// 500 Internal Server Error
+	statusCodes := []string{"200", "401", "403", "404", "500"}
+	for _, code := range statusCodes {
+		if strings.Contains(response, "RTSP/1.0 "+code) {
+			return true
+		}
+	}
+	
+	return false
 }

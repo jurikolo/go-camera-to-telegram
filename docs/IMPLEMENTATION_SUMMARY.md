@@ -21,7 +21,6 @@ go-camera-to-telegram/
 │   └── config/                 # Configuration management
 ├── pkg/network/                # Reusable network utilities
 ├── configs/                     # Configuration files
-├── examples/                   # Usage examples
 ├── tests/                       # Integration tests
 ├── docs/                       # Comprehensive documentation
 ├── deploy/                     # Deployment files
@@ -96,20 +95,13 @@ Created comprehensive documentation including:
 - **PROJECT_OVERVIEW.md**: Complete project overview
 - **IMPLEMENTATION_SUMMARY.md**: This document
 
-### 10. Examples (`examples/`)
-
-Created example code demonstrating:
-- Network utility usage
-- Camera scanning functionality
-- Component integration
-
-### 11. Tests (`tests/integration_test.go`)
+### 10. Tests (`tests/integration_test.go`)
 
 Created placeholder integration tests:
 - Basic test structure
 - Ready for implementation of actual tests
 
-### 12. Deployment (`deploy/scanner.service`)
+### 11. Deployment (`deploy/scanner.service`)
 
 Created a systemd service file for:
 - Automatic startup
@@ -117,7 +109,7 @@ Created a systemd service file for:
 - Environment variable support
 - Restart on failure
 
-### 13. Go Module Files (`go.mod` and `go.sum`)
+### 12. Go Module Files (`go.mod` and `go.sum`)
 
 Created Go module files with:
 - Module definition
@@ -137,7 +129,6 @@ We have successfully implemented separation of concerns by:
 5. **`tests/`**: Separating test code
 6. **`docs/`**: Organizing documentation
 7. **`deploy/`**: Managing deployment files
-8. **`examples/`**: Providing usage examples
 
 ### Dependency Direction
 
@@ -181,7 +172,6 @@ We have implemented proper encapsulation by:
 
 - Comprehensive documentation in `docs/` directory
 - Clear explanations of design principles
-- Usage examples
 
 ### 5. Testing
 

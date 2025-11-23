@@ -14,6 +14,8 @@ go-camera-to-telegram/
 │   │   ├── scanner.go          # Network scanning functionality
 │   │   ├── rtsp.go              # RTSP client implementation
 │   │   └── capture.go            # Image capture functionality
+│   ├── network/
+│   │   └── scanner.go            # Network scanning and RTSP verification
 │   ├── telegram/
 │   │   └── client.go            # Telegram bot client
 │   └── config/
@@ -60,6 +62,12 @@ This package handles all functionality related to IP camera discovery, RTSP conn
 - **`scanner.go`**: Implements network scanning for IP cameras
 - **`rtsp.go`**: Handles RTSP protocol communication with cameras
 - **`capture.go`**: Manages image capture from RTSP streams
+
+#### `internal/network/`
+
+This package handles network-level functionality:
+
+- **`scanner.go`**: Implements network scanning for active hosts and RTSP service verification
 
 #### `internal/telegram/`
 
@@ -109,9 +117,10 @@ The `docs/` directory contains documentation files like this one.
 
 Each package has a single, well-defined responsibility:
 - `camera` package: Everything related to IP cameras
+- `network` package: Network scanning and RTSP verification
 - `telegram` package: Everything related to Telegram integration
 - `config` package: Configuration management
-- `network` package: Generic network utilities
+- `pkg/network` package: Generic network utilities
 
 ### Dependency Direction
 

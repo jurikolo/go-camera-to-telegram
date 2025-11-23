@@ -150,3 +150,69 @@ func TestIncIP(t *testing.T) {
 		t.Errorf("Expected %s, got %s", expected, ip)
 	}
 }
+
+// TestScanner_VerifyRTSP tests the VerifyRTSP method
+func TestScanner_VerifyRTSP(t *testing.T) {
+	scanner := NewScanner(2, 500*time.Millisecond, 100*time.Millisecond)
+
+	// Test with localhost - this test will depend on whether there's actually an RTSP server running
+	ctx := context.Background()
+	valid, err := scanner.VerifyRTSP(ctx, "127.0.0.1")
+	
+	// We can't assert the result since it depends on whether there's an RTSP server running
+	// but we can check that the function doesn't panic and returns without error
+	_ = valid
+	if err != nil {
+		// This is expected if there's no RTSP server running
+		t.Logf("RTSP verification failed as expected (no server running): %v", err)
+	}
+}
+
+// TestScanner_isValidRTSPResponse tests the isValidRTSPResponse method
+func TestScanner_isValidRTSPResponse(t *testing.T) {
+	scanner := NewScanner(2, time.Second, 100*time.Millisecond)
+
+	// Test valid RTSP responses
+	validResponses := []string{
+		"RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: OPTIONS, DESCRIBE, SETUP, PLAY, TEARDOWN\r\n\r\n",
+		"RTSP/1.0 401 Unauthorized\r\nCSeq: 1\r\nWWW-Authenticate: Basic realm=\"camera\"\r\n\r\n",
+		"RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n",
+	}
+
+	for i, response := range validResponses {
+		if !scanner.isValidRTSPResponse(response) {
+			t.Errorf("Test %d: Expected valid RTSP response, got invalid", i)
+		}
+	}
+
+	// Test invalid RTSP responses
+	invalidResponses := []string{
+		"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n",
+		"Invalid response",
+		"",
+		"RTSP/1.0 Invalid\r\n\r\n",
+	}
+
+	for i, response := range invalidResponses {
+		if scanner.isValidRTSPResponse(response) {
+			t.Errorf("Test %d: Expected invalid RTSP response, got valid", i)
+		}
+	}
+}
+
+// TestScanner_verifyRTSPWithRetry tests the verifyRTSPWithRetry method
+func TestScanner_verifyRTSPWithRetry(t *testing.T) {
+	scanner := NewScanner(2, 100*time.Millisecond, 10*time.Millisecond)
+
+	// Test with context cancellation
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	valid, err := scanner.verifyRTSPWithRetry(ctx, "127.0.0.1", 2, 10*time.Millisecond)
+	if valid {
+		t.Error("Expected false for cancelled context, got true")
+	}
+	if err != context.Canceled {
+		t.Errorf("Expected context.Canceled error, got %v", err)
+	}
+}

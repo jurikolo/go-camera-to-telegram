@@ -33,12 +33,6 @@ go-camera-to-telegram/
 │       └── iputil.go          # Network utility functions
 ├── configs/
 │   └── config.yaml             # Configuration file
-├── examples/
-│   ├── README.md               # Examples documentation
-│   ├── network/
-│   │   └── network_scan.go     # Network utilities example
-│   └── camera/
-│       └── camera_scan.go      # Camera scanning example
 ├── tests/
 │   └── integration_test.go    # Integration tests
 ├── docs/
@@ -76,6 +70,14 @@ Handles all camera-related functionality:
 - **RTSP Client**: Connects to cameras using RTSP protocol
 - **Capture**: Extracts images from RTSP streams
 
+### Network Scanning (`internal/network`)
+
+Handles network-level functionality:
+
+- **Scanner**: Scans network CIDR ranges for active hosts
+- **RTSP Verification**: Verifies RTSP service availability with OPTIONS requests
+- **Port Scanning**: Checks if specific ports are open on hosts
+
 ### Telegram Integration (`internal/telegram`)
 
 Manages communication with Telegram:
@@ -112,7 +114,6 @@ The project follows Go best practices for separation of concerns:
 - `tests/`: Integration tests
 - `docs/`: Documentation
 - `deploy/`: Deployment files
-- `examples/`: Usage examples
 
 ### Dependency Direction
 
@@ -169,7 +170,6 @@ The project includes:
 
 - **Unit Tests**: For individual components (to be implemented)
 - **Integration Tests**: For component interactions
-- **Examples**: Demonstrating usage patterns
 
 ## Documentation
 
@@ -179,14 +179,6 @@ Comprehensive documentation is provided in the `docs/` directory:
 - **Building**: Instructions for building and running
 - **Project Structure**: Explanation of directory organization
 - **Separation of Concerns**: Design principles and rationale
-
-## Examples
-
-The `examples/` directory contains sample code demonstrating:
-
-- Network utility usage
-- Camera scanning functionality
-- Component integration
 
 ## Future Development
 
