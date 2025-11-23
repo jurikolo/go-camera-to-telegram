@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/jurikolo/go-camera-to-telegram/internal/camera"
 	"github.com/jurikolo/go-camera-to-telegram/internal/config"
@@ -66,9 +67,33 @@ func main() {
 		fmt.Printf("  - %s\n", cameraIP)
 	}
 	
-	// TODO: Implement image capture and Telegram integration
-	// 1. Capture images from discovered cameras
-	// 2. Send images to Telegram
+	// Create camera capture instance
+	capture := camera.NewCapture()
+	
+	// Capture images from discovered cameras
+	for _, cameraIP := range cameras {
+		fmt.Printf("Capturing frame from camera at %s...\n", cameraIP)
+		
+		// Set capture options
+		options := &camera.CaptureOptions{
+			Timeout:   30 * time.Second,
+			Quality:   75,
+			MaxWidth:  1920,
+			MaxHeight: 1080,
+		}
+		
+		// Capture frame
+		jpegData, err := capture.CaptureFrame(cameraIP, cfg.RTSP.Username, cfg.RTSP.Password, options)
+		if err != nil {
+			fmt.Printf("Failed to capture frame from camera at %s: %v\n", cameraIP, err)
+			continue
+		}
+		
+		fmt.Printf("Successfully captured frame from camera at %s (%d bytes)\n", cameraIP, len(jpegData))
+		
+		// TODO: Send image to Telegram
+		// This would involve using the Telegram client to send the JPEG data
+	}
 	
 	fmt.Println("Scanner initialized successfully.")
 }

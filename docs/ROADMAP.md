@@ -1,0 +1,264 @@
+**AI Prompt for this step:**
+> "Generate a Go project structure for an IP camera scanner with Telegram integration. Include best practices for internal vs pkg directories, and explain the separation of concerns."
+
+### Step 1.2: Define Configuration
+Create configuration management for:
+- Network scan range
+- RTSP credentials
+- Telegram bot token and chat ID
+- Scan intervals
+- Timeout settings
+
+**AI Prompt:**
+> "Create a Go configuration package using Viper or similar library to handle YAML config files. Include environment variable overrides and validation for: network CIDR, RTSP credentials, Telegram bot token, and scan parameters."
+
+---
+
+## Phase 2: Network Scanning Module (Days 2-3)
+
+### Step 2.1: IP Range Scanner
+Implement concurrent IP scanning on the local network.
+
+**Key requirements:**
+- Parse CIDR notation (e.g., 192.168.1.0/24)
+- Concurrent scanning with worker pool pattern
+- Configurable timeout
+- Rate limiting to avoid network flooding
+
+**AI Prompt:**
+> "Implement a Go function that scans a CIDR range for active hosts on port 554. Use goroutines with a worker pool pattern (limit to 50 concurrent workers), include context-based cancellation, and proper error handling. Add unit tests with mock network connections."
+
+### Step 2.2: RTSP Port Detection
+Verify RTSP service availability on port 554.
+
+**AI Prompt:**
+> "Create a Go function to verify RTSP service on port 554 using net.DialTimeout. Include RTSP OPTIONS method verification and handle common RTSP responses. Add retry logic with exponential backoff."
+
+---
+
+## Phase 3: RTSP Camera Integration (Days 4-6)
+
+### Step 3.1: RTSP Client Implementation
+Connect to cameras and retrieve video streams.
+
+**Libraries to consider:**
+- `github.com/deepch/vdk` for RTSP
+- `github.com/pion/rtsp` as alternative
+- FFmpeg bindings for frame extraction
+
+**AI Prompt:**
+> "Implement an RTSP client in Go that connects to an IP camera using RTSP protocol. The client should authenticate with username/password, handle DESCRIBE, SETUP, and PLAY commands. Include connection pooling and graceful disconnection. Use github.com/deepch/vdk or recommend a better library."
+
+### Step 3.2: Frame Capture & Image Extraction
+Extract a single frame and convert to JPEG.
+
+**AI Prompt:**
+> "Create a Go function that captures a single frame from an RTSP stream and converts it to JPEG format. Handle H.264/H.265 codecs, implement timeout mechanisms, and ensure memory efficiency. Include options for image quality and resolution."
+
+### Step 3.3: Image Processing (Optional)
+Add timestamp, camera identifier, or basic image validation.
+
+**AI Prompt:**
+> "Implement Go image processing functions to add timestamp watermarks and camera labels to captured images. Use the standard image package and image/draw for overlays. Keep it lightweight for Raspberry Pi performance."
+
+---
+
+## Phase 4: Telegram Integration (Days 7-8)
+
+### Step 4.1: Telegram Bot Client
+Implement Telegram Bot API integration.
+
+**Library:**
+- `github.com/go-telegram-bot-api/telegram-bot-api/v5`
+
+**AI Prompt:**
+> "Create a Telegram bot client wrapper in Go using go-telegram-bot-api/v5. Implement methods to: send photos with captions, handle rate limiting (Telegram allows 30 messages/second to different chats), retry failed uploads, and validate bot token on initialization. Include comprehensive error handling."
+
+### Step 4.2: Message Formatting
+Create informative messages with camera details.
+
+**AI Prompt:**
+> "Design a Go function that formats camera snapshot messages for Telegram. Include: camera IP, capture timestamp, camera name (if available), and any connection metadata. Support markdown formatting for Telegram."
+
+---
+
+## Phase 5: Application Logic & Orchestration (Days 9-10)
+
+### Step 5.1: Main Application Flow
+Coordinate scanning, capture, and sending operations.
+
+**AI Prompt:**
+> "Design the main application loop in Go that: 1) Scans network for cameras, 2) Captures images from discovered cameras concurrently, 3) Sends images to Telegram, 4) Runs on a configurable schedule. Use context for graceful shutdown, implement proper logging with levels, and handle partial failures gracefully."
+
+### Step 5.2: Concurrency Management
+Implement worker pools and rate limiting.
+
+**AI Prompt:**
+> "Create a Go worker pool implementation for processing multiple cameras concurrently. Limit concurrent captures (max 3-5 for Raspberry Pi), implement semaphore pattern for resource control, and add metrics collection (cameras found, successful captures, failures)."
+
+### Step 5.3: Error Handling & Retry Logic
+Robust error handling for network operations.
+
+**AI Prompt:**
+> "Implement comprehensive error handling and retry logic for: network timeouts, RTSP connection failures, Telegram API errors, and disk I/O issues. Use exponential backoff with jitter, circuit breaker pattern for persistently failing cameras, and structured logging."
+
+---
+
+## Phase 6: Security & Best Practices (Days 11-12)
+
+### Step 6.1: Credential Management
+Secure handling of sensitive data.
+
+**AI Prompt:**
+> "Implement secure credential management in Go for RTSP passwords and Telegram bot tokens. Support: environment variables, encrypted config files, and secrets stored in files with proper permissions. Add validation to prevent credential leaks in logs."
+
+### Step 6.2: Input Validation
+Validate all external inputs.
+
+**AI Prompt:**
+> "Create Go validation functions for: IP addresses, CIDR ranges, port numbers, file paths, and user inputs. Prevent injection attacks, validate against allowed ranges, and provide clear error messages."
+
+### Step 6.3: Resource Management
+Prevent memory leaks and resource exhaustion.
+
+**AI Prompt:**
+> "Review the application architecture for proper resource management: ensure all connections are closed, contexts are cancelled, goroutines are properly terminated, and temporary files are cleaned up. Implement a cleanup mechanism using defer and context cancellation."
+
+---
+
+## Phase 7: Testing (Days 13-15)
+
+### Step 7.1: Unit Tests
+Test individual components.
+
+**AI Prompt:**
+> "Generate comprehensive unit tests for the IP camera scanner Go application. Include: table-driven tests for IP parsing, mock RTSP servers for camera tests, mock Telegram API responses, and edge cases (timeouts, invalid inputs, network errors). Use testify/assert for assertions."
+
+### Step 7.2: Integration Tests
+Test component interactions.
+
+**AI Prompt:**
+> "Create integration tests for the camera scanner application that: test end-to-end flow with mock cameras, verify Telegram message delivery, test configuration loading, and validate concurrent operations. Use Docker containers for test dependencies if needed."
+
+### Step 7.3: Performance Testing
+Optimize for Raspberry Pi 4.
+
+**AI Prompt:**
+> "Design performance benchmarks for the Go camera scanner. Test: network scanning speed, concurrent camera capture limits, memory usage during operations, and identify bottlenecks on Raspberry Pi 4 (ARM architecture). Provide optimization recommendations."
+
+---
+
+## Phase 8: Documentation (Day 16)
+
+### Step 8.1: Code Documentation
+Generate godoc-style documentation.
+
+**AI Prompt:**
+> "Review the codebase and add comprehensive godoc comments for all exported functions, types, and packages. Follow Go documentation conventions, include usage examples in comments, and document error conditions."
+
+### Step 8.2: User Documentation
+Create comprehensive README and guides.
+
+**AI Prompt:**
+> "Create a comprehensive README.md for the IP camera scanner application including: features overview, prerequisites, installation steps for Raspberry Pi 4, configuration guide with examples, usage instructions, troubleshooting section, and architecture diagram."
+
+### Step 8.3: Deployment Guide
+Raspberry Pi specific deployment.
+
+**AI Prompt:**
+> "Write a deployment guide for running the Go camera scanner on Raspberry Pi 4 with Raspbian. Include: systemd service configuration, automatic startup, log rotation, update procedures, security hardening steps, and monitoring setup."
+
+---
+
+## Phase 9: Packaging & Deployment (Day 17)
+
+### Step 9.1: Build Pipeline
+Create cross-compilation and build scripts.
+
+**AI Prompt:**
+> "Create a Makefile for the Go camera scanner with targets for: building ARM binaries for Raspberry Pi, running tests, linting with golangci-lint, generating documentation, and creating release packages. Include version information in builds."
+
+### Step 9.2: Systemd Integration
+Run as a system service.
+
+**AI Prompt:**
+> "Create a systemd service unit file for the camera scanner Go application. Include: automatic restart on failure, proper user/group permissions, environment variable loading, logging to journald, and dependencies on network availability."
+
+### Step 9.3: Monitoring & Logging
+Implement observability.
+
+**AI Prompt:**
+> "Add structured logging to the camera scanner using zerolog or zap. Include log levels, correlation IDs for requests, metrics export (cameras scanned, success rate, latency), and health check endpoint. Make it Raspberry Pi resource-efficient."
+
+---
+
+## Phase 10: Optimization & Polish (Day 18)
+
+### Step 10.1: Performance Optimization
+Raspberry Pi specific optimizations.
+
+**AI Prompt:**
+> "Optimize the Go camera scanner for Raspberry Pi 4: reduce memory allocations, implement object pooling for images, optimize RTSP stream parsing, reduce CPU usage during idle periods, and profile the application to find bottlenecks using pprof."
+
+### Step 10.2: Configuration Tuning
+Provide optimal defaults.
+
+**AI Prompt:**
+> "Create optimal configuration presets for the camera scanner based on different scenarios: small network (1-5 cameras), medium network (5-20 cameras), and large network (20+ cameras). Consider Raspberry Pi 4 limitations and provide tuning guidelines."
+
+---
+
+## Additional Considerations
+
+### Security Checklist
+- [ ] No hardcoded credentials
+- [ ] Encrypted configuration for sensitive data
+- [ ] Input validation on all external data
+- [ ] Rate limiting on network operations
+- [ ] Secure file permissions
+- [ ] Regular dependency updates
+- [ ] No sensitive data in logs
+
+### Production Readiness Checklist
+- [ ] Comprehensive error handling
+- [ ] Graceful shutdown
+- [ ] Health checks
+- [ ] Metrics and monitoring
+- [ ] Log rotation
+- [ ] Resource cleanup
+- [ ] Documentation complete
+- [ ] CI/CD pipeline
+- [ ] Automated tests passing
+- [ ] Security audit completed
+
+### Raspberry Pi Specific Considerations
+- Use ARM-optimized builds (`GOARCH=arm64`)
+- Monitor CPU temperature during operations
+- Implement backoff if system resources are constrained
+- Use efficient image formats and compression
+- Consider SD card wear for logging
+
+---
+
+## Useful Go Libraries
+
+**Core Dependencies:**
+- `github.com/spf13/viper` - Configuration management
+- `github.com/go-telegram-bot-api/telegram-bot-api/v5` - Telegram Bot API
+- `github.com/deepch/vdk` or `github.com/pion/rtsp` - RTSP handling
+- `github.com/rs/zerolog` - Structured logging
+- `github.com/stretchr/testify` - Testing utilities
+
+**Optional:**
+- `github.com/prometheus/client_golang` - Metrics
+- `golang.org/x/sync/errgroup` - Advanced concurrency
+- `github.com/robfig/cron/v3` - Scheduled tasks
+
+---
+
+## Development Timeline Summary
+- **Week 1 (Days 1-5):** Setup, network scanning, basic RTSP
+- **Week 2 (Days 6-10):** Image capture, Telegram integration, orchestration
+- **Week 3 (Days 11-18):** Security, testing, documentation, deployment
+
+This roadmap provides a structured approach where each step can be tackled with AI assistance. Each AI prompt is designed to generate production-ready code that follows Go best practices while being optimized for Raspberry Pi deployment.
