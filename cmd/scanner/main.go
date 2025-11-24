@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jurikolo/go-camera-to-telegram/internal/camera"
 	"github.com/jurikolo/go-camera-to-telegram/internal/config"
+	"github.com/jurikolo/go-camera-to-telegram/internal/telegram"
 )
 
 func main() {
@@ -49,7 +51,15 @@ func main() {
 	fmt.Printf("  Network CIDR: %s\n", cfg.Network.CIDR)
 	fmt.Printf("  RTSP Username: %s\n", cfg.RTSP.Username)
 	fmt.Printf("  Telegram Bot Token: %s\n", cfg.Telegram.BotToken)
+	fmt.Printf("  Telegram Chat ID: %d\n", cfg.Telegram.ChatID)
 	fmt.Printf("  Scan Interval: %d minutes\n", cfg.Scan.Interval)
+	
+	// Create Telegram client
+	telegramClient, err := telegram.NewClient(cfg.Telegram.BotToken, cfg.Telegram.ChatID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create Telegram client: %v\n", err)
+		os.Exit(1)
+	}
 	
 	// Create camera scanner
 	scanner := camera.NewScanner(cfg)
@@ -106,8 +116,21 @@ func main() {
 		
 		fmt.Printf("Successfully processed image from camera at %s (%d bytes)\n", cameraIP, len(processedImage.Data))
 		
-		// TODO: Send image to Telegram
-		// This would involve using the Telegram client to send the processedImage.Data
+		// Send image to Telegram
+		cameraInfo := telegram.CameraInfo{
+			IP:          cameraIP,
+			CaptureTime: time.Now(),
+			Metadata: map[string]string{
+				"Image Size": fmt.Sprintf("%d bytes", len(processedImage.Data)),
+			},
+		}
+		caption := telegramClient.FormatCameraMessage(cameraInfo)
+		err = telegramClient.SendPhoto(strings.NewReader(string(processedImage.Data)), caption)
+		if err != nil {
+			fmt.Printf("Failed to send image to Telegram from camera at %s: %v\n", cameraIP, err)
+		} else {
+			fmt.Printf("Successfully sent image to Telegram from camera at %s\n", cameraIP)
+		}
 	}
 	
 	fmt.Println("Scanner initialized successfully.")

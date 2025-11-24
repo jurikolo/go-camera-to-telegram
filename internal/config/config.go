@@ -34,7 +34,7 @@ type RTSPConfig struct {
 // TelegramConfig holds Telegram-related configuration
 type TelegramConfig struct {
 	BotToken string `mapstructure:"bot_token"`
-	ChatID   string `mapstructure:"chat_id"`
+	ChatID   int64  `mapstructure:"chat_id"`
 }
 
 // ScanConfig holds scan-related configuration
@@ -150,7 +150,7 @@ func (t *TelegramConfig) Validate() error {
 		return fmt.Errorf("bot_token is required")
 	}
 	
-	if t.ChatID == "" {
+	if t.ChatID == 0 {
 		return fmt.Errorf("chat_id is required")
 	}
 	

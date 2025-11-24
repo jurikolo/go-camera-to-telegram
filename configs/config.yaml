@@ -21,7 +21,7 @@ telegram:
   # Telegram bot token (get from @BotFather)
   bot_token: "YOUR_BOT_TOKEN_HERE"
   # Chat ID to send messages to
-  chat_id: "YOUR_CHAT_ID_HERE"
+  chat_id: 123456789
 
 # Scan configuration
 scan:
