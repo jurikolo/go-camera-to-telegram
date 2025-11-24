@@ -27,7 +27,7 @@ type CaptureOptions struct {
 // NewCapture creates a new capture instance
 func NewCapture() *Capture {
 	return &Capture{
-		pool: NewConnectionPool(10, 30*time.Second), // Max 10 connections, 30s timeout
+		pool: NewConnectionPool(10, 5*time.Second), // Max 10 connections, 5s timeout
 	}
 }
 
@@ -36,7 +36,7 @@ func (c *Capture) CaptureFrame(cameraIP, username, password string, options *Cap
 	// Set default options if not provided
 	if options == nil {
 		options = &CaptureOptions{
-			Timeout: 30 * time.Second,
+			Timeout: 5 * time.Second,
 			Quality: 75,
 		}
 	}

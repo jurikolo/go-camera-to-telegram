@@ -76,7 +76,7 @@ func main() {
 		
 		// Set capture options
 		options := &camera.CaptureOptions{
-			Timeout:   30 * time.Second,
+			Timeout:   5 * time.Second,
 			Quality:   75,
 			MaxWidth:  1920,
 			MaxHeight: 1080,
@@ -91,8 +91,23 @@ func main() {
 		
 		fmt.Printf("Successfully captured frame from camera at %s (%d bytes)\n", cameraIP, len(jpegData))
 		
+		// Add watermark to the captured image
+		processOptions := &camera.ProcessOptions{
+			AddTimestamp: true,
+			AddCameraID: true,
+			CameraID:    cameraIP,
+		}
+		
+		processedImage, err := camera.AddWatermark(jpegData, processOptions)
+		if err != nil {
+			fmt.Printf("Failed to add watermark to image from camera at %s: %v\n", cameraIP, err)
+			continue
+		}
+		
+		fmt.Printf("Successfully processed image from camera at %s (%d bytes)\n", cameraIP, len(processedImage.Data))
+		
 		// TODO: Send image to Telegram
-		// This would involve using the Telegram client to send the JPEG data
+		// This would involve using the Telegram client to send the processedImage.Data
 	}
 	
 	fmt.Println("Scanner initialized successfully.")

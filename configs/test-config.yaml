@@ -14,7 +14,7 @@ rtsp:
   # Default password for RTSP authentication
   password: "password"
   # Timeout in seconds for RTSP operations
-  timeout: 30
+  timeout: 5
 
 # Telegram configuration
 telegram:
@@ -26,6 +26,6 @@ telegram:
 # Scan configuration
 scan:
   # Interval between scans in minutes
-  interval: 30
+  interval: 10
   # Maximum number of cameras to process concurrently
   max_concurrent: 3

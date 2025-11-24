@@ -9,14 +9,14 @@ import (
 // TestCaptureOptions tests the CaptureOptions struct
 func TestCaptureOptions(t *testing.T) {
 	options := &CaptureOptions{
-		Timeout:   30 * time.Second,
+		Timeout:   5 * time.Second,
 		Quality:   75,
 		MaxWidth:  1920,
 		MaxHeight: 1080,
 	}
 	
-	if options.Timeout != 30*time.Second {
-		t.Errorf("Expected timeout 30s, got %v", options.Timeout)
+	if options.Timeout != 5*time.Second {
+		t.Errorf("Expected timeout 5s, got %v", options.Timeout)
 	}
 	
 	if options.Quality != 75 {

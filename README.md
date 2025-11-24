@@ -60,7 +60,7 @@ rtsp:
   # Default password for RTSP authentication
   password: "password"
   # Timeout in seconds for RTSP operations
-  timeout: 30
+  timeout: 5
 
 # Telegram configuration
 telegram:
@@ -72,7 +72,7 @@ telegram:
 # Scan configuration
 scan:
   # Interval between scans in minutes
-  interval: 30
+  interval: 10
   # Maximum number of cameras to process concurrently
   max_concurrent: 3
 ```
@@ -118,7 +118,7 @@ capture := camera.NewCapture()
 
 // Set capture options
 options := &camera.CaptureOptions{
-    Timeout:   30 * time.Second,
+    Timeout:   5 * time.Second,
     Quality:   75,
     MaxWidth:  1920,
     MaxHeight: 1080,
@@ -126,6 +126,27 @@ options := &camera.CaptureOptions{
 
 // Capture frame
 jpegData, err := capture.CaptureFrame(cameraIP, username, password, options)
+```
+
+### Image Processing
+
+The application can add watermarks and labels to captured images:
+
+- Timestamp overlays
+- Camera identification labels
+- Custom text overlays
+- Lightweight processing suitable for Raspberry Pi
+
+Example usage:
+```go
+// Add watermark to captured image
+processOptions := &camera.ProcessOptions{
+    AddTimestamp: true,
+    AddCameraID: true,
+    CameraID:    cameraIP,
+}
+
+processedImage, err := camera.AddWatermark(jpegData, processOptions)
 ```
 
 ## Project Structure
@@ -152,6 +173,8 @@ jpegData, err := capture.CaptureFrame(cameraIP, username, password, options)
 │   ├── camera/
 │   │   ├── capture.go       # Image capture functionality
 │   │   ├── pool.go          # Connection pool for RTSP clients
+│   │   ├── processor.go     # Image processing functionality
+│   │   ├── processor_test.go # Image processing tests
 │   │   ├── rtsp.go          # RTSP client implementation
 │   │   ├── rtsp_test.go     # RTSP client tests
 │   │   └── scanner.go       # Network scanner for IP cameras
