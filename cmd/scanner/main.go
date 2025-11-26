@@ -56,13 +56,11 @@ func main() {
 
 	log.Info("Configuration loaded successfully")
 	log.Info("  Network CIDR: %s", cfg.Network.CIDR)
-	log.Info("  RTSP Username: %s", cfg.RTSP.Username)
-	log.Info("  Telegram Bot Token: %s", cfg.Telegram.BotToken)
 	log.Info("  Telegram Chat ID: %d", cfg.Telegram.ChatID)
 	log.Info("  Scan Interval: %d minutes", cfg.Scan.Interval)
 
 	// Create Telegram client
-	telegramClient, err := telegram.NewClient(cfg.Telegram.BotToken, cfg.Telegram.ChatID)
+	telegramClient, err := telegram.NewClient(cfg.TelegramToken.Value(), cfg.Telegram.ChatID)
 	if err != nil {
 		log.Fatal("Failed to create Telegram client: %v", err)
 	}
@@ -240,7 +238,7 @@ func processCamera(ctx context.Context, log *logger.Logger, cfg *config.Config, 
 
 	// Capture frame
 	log.Info("Capturing frame from camera at %s", cameraIP)
-	jpegData, err := capture.CaptureFrame(cameraIP, cfg.RTSP.Username, cfg.RTSP.Password, options)
+	jpegData, err := capture.CaptureFrame(cameraIP, cfg.RTSPUsername.Value(), cfg.RTSPPassword.Value(), options)
 	if err != nil {
 		return fmt.Errorf("failed to capture frame: %w", err)
 	}

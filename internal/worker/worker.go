@@ -189,7 +189,7 @@ func (wp *WorkerPool) processCamera(ctx context.Context, cameraIP string) error 
 	captureErr := cb.Execute(func() error {
 		return retry.WithRetry(retry.DefaultConfig(), func() error {
 			var err error
-			jpegData, err = wp.capture.CaptureFrame(cameraIP, wp.cfg.RTSP.Username, wp.cfg.RTSP.Password, options)
+			jpegData, err = wp.capture.CaptureFrame(cameraIP, wp.cfg.RTSPUsername.Value(), wp.cfg.RTSPPassword.Value(), options)
 			return err
 		})
 	})
