@@ -2,6 +2,7 @@
 package retry
 
 import (
+	"context"
 	"math/rand"
 	"time"
 )
@@ -32,7 +33,7 @@ func DefaultConfig() Config {
 }
 
 // WithRetry executes the given function with retry logic
-func WithRetry(config Config, fn func() error) error {
+func WithRetry(ctx context.Context, config Config, fn func() error) error {
 	delay := config.InitialDelay
 	
 	for i := 0; i <= config.MaxRetries; i++ {
@@ -60,8 +61,12 @@ func WithRetry(config Config, fn func() error) error {
 			delayWithJitter = config.MaxDelay
 		}
 		
-		// Wait before retrying
-		time.Sleep(delayWithJitter)
+		// Wait before retrying or until context is cancelled
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(delayWithJitter):
+		}
 		
 		// Calculate next delay
 		delay = time.Duration(float64(delay) * config.Multiplier)

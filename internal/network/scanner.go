@@ -100,6 +100,13 @@ func (s *Scanner) ScanCIDR(ctx context.Context, cidr string) ([]string, error) {
 	// Collect results
 	activeHosts := make([]string, 0)
 	for result := range results {
+		// Check if context was cancelled
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+		
 		if result.Error != nil {
 			// Log error but continue scanning
 			continue
@@ -157,7 +164,13 @@ func (s *Scanner) isPortOpen(ctx context.Context, host, port string, timeout tim
 		// Port is closed or unreachable
 		return false, nil
 	}
-	defer conn.Close()
+	
+	// Close connection when done
+	defer func() {
+		if conn != nil {
+			conn.Close()
+		}
+	}()
 
 	// Port is open
 	return true, nil
@@ -229,7 +242,13 @@ func (s *Scanner) verifyRTSP(ctx context.Context, host string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to connect to RTSP port: %w", err)
 	}
-	defer conn.Close()
+	
+	// Close connection when done
+	defer func() {
+		if conn != nil {
+			conn.Close()
+		}
+	}()
 	
 	// Send RTSP OPTIONS request
 	optionsRequest := fmt.Sprintf("OPTIONS rtsp://%s:554/ RTSP/1.0\r\n"+
@@ -240,6 +259,13 @@ func (s *Scanner) verifyRTSP(ctx context.Context, host string) (bool, error) {
 	// Set write deadline
 	if err := conn.SetWriteDeadline(time.Now().Add(s.timeout)); err != nil {
 		return false, fmt.Errorf("failed to set write deadline: %w", err)
+	}
+	
+	// Check if context was cancelled before sending request
+	select {
+	case <-ctx.Done():
+		return false, ctx.Err()
+	default:
 	}
 	
 	// Send the request
@@ -254,6 +280,14 @@ func (s *Scanner) verifyRTSP(ctx context.Context, host string) (bool, error) {
 	
 	// Read the response
 	buffer := make([]byte, 4096)
+	
+	// Check if context was cancelled before reading response
+	select {
+	case <-ctx.Done():
+		return false, ctx.Err()
+	default:
+	}
+	
 	n, err := conn.Read(buffer)
 	if err != nil {
 		return false, fmt.Errorf("failed to read RTSP response: %w", err)

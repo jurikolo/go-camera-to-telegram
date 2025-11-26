@@ -3,6 +3,7 @@ package camera
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -31,8 +32,15 @@ func NewCapture() *Capture {
 	}
 }
 
+// Close closes all connections in the connection pool
+func (c *Capture) Close() {
+	if c.pool != nil {
+		c.pool.Close()
+	}
+}
+
 // CaptureFrame captures a single frame from an RTSP stream and converts it to JPEG
-func (c *Capture) CaptureFrame(cameraIP, username, password string, options *CaptureOptions) ([]byte, error) {
+func (c *Capture) CaptureFrame(ctx context.Context, cameraIP, username, password string, options *CaptureOptions) ([]byte, error) {
 	// Set default options if not provided
 	if options == nil {
 		options = &CaptureOptions{
@@ -58,18 +66,18 @@ func (c *Capture) CaptureFrame(cameraIP, username, password string, options *Cap
 	for _, stream := range streams {
 		if stream.Type() == av.MJPEG {
 			// Stream is already in JPEG format, just capture a frame
-			return c.captureJPEGFrame(client, options)
+			return c.captureJPEGFrame(ctx, client, options)
 		}
 	}
 	
 	// For H.264/H.265 streams, we would need to decode the video frame
 	// Since we don't have FFmpeg dependencies, we'll return the raw packet data
 	// In a real implementation, you would decode the video frame here
-	return c.captureRawFrame(client, options)
+	return c.captureRawFrame(ctx, client, options)
 }
 
 // captureJPEGFrame captures a JPEG frame from an MJPEG stream
-func (c *Capture) captureJPEGFrame(client *RTSPClient, options *CaptureOptions) ([]byte, error) {
+func (c *Capture) captureJPEGFrame(ctx context.Context, client *RTSPClient, options *CaptureOptions) ([]byte, error) {
 	// Read packets until we get a video keyframe
 	timeout := time.After(options.Timeout)
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -77,11 +85,13 @@ func (c *Capture) captureJPEGFrame(client *RTSPClient, options *CaptureOptions) 
 	
 	for {
 		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		case <-timeout:
 			return nil, fmt.Errorf("timeout waiting for JPEG frame")
 		case <-ticker.C:
 			// Try to read a packet
-			packet, err := client.CaptureFrame()
+			packet, err := client.CaptureFrame(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read packet: %w", err)
 			}
@@ -95,7 +105,7 @@ func (c *Capture) captureJPEGFrame(client *RTSPClient, options *CaptureOptions) 
 // captureRawFrame captures a raw frame from an H.264/H.265 stream
 // Note: This is a simplified implementation that returns the raw packet data
 // In a real implementation, you would decode the video frame using FFmpeg or similar
-func (c *Capture) captureRawFrame(client *RTSPClient, options *CaptureOptions) ([]byte, error) {
+func (c *Capture) captureRawFrame(ctx context.Context, client *RTSPClient, options *CaptureOptions) ([]byte, error) {
 	// Read packets until we get a video keyframe
 	timeout := time.After(options.Timeout)
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -103,11 +113,13 @@ func (c *Capture) captureRawFrame(client *RTSPClient, options *CaptureOptions) (
 	
 	for {
 		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		case <-timeout:
 			return nil, fmt.Errorf("timeout waiting for video frame")
 		case <-ticker.C:
 			// Try to read a packet
-			packet, err := client.CaptureFrame()
+			packet, err := client.CaptureFrame(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read packet: %w", err)
 			}

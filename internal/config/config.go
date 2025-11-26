@@ -3,11 +3,11 @@ package config
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"strings"
 
 	"github.com/jurikolo/go-camera-to-telegram/internal/credentials"
+	"github.com/jurikolo/go-camera-to-telegram/internal/validation"
 	"github.com/spf13/viper"
 )
 
@@ -327,7 +327,8 @@ func (n *NetworkConfig) Validate() error {
 		return fmt.Errorf("cidr is required")
 	}
 	
-	if _, _, err := net.ParseCIDR(n.CIDR); err != nil {
+	// Use the validation package for CIDR validation
+	if err := validation.ValidateCIDR(n.CIDR); err != nil {
 		return fmt.Errorf("invalid cidr format: %w", err)
 	}
 	
@@ -346,6 +347,11 @@ func (n *NetworkConfig) Validate() error {
 func (r *RTSPConfig) Validate() error {
 	if r.Timeout <= 0 {
 		return fmt.Errorf("timeout must be positive")
+	}
+	
+	// Validate timeout with clear error messages using validation package
+	if err := validation.ValidatePortInt(r.Timeout); err != nil {
+		return fmt.Errorf("invalid timeout value: %w", err)
 	}
 	
 	return nil

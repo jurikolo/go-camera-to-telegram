@@ -2,6 +2,7 @@
 package telegram
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -47,8 +48,16 @@ func NewClient(botToken string, chatID int64) (*Client, error) {
 	}, nil
 }
 
+// Close closes the Telegram client and cleans up resources
+func (c *Client) Close() error {
+	// The tgbotapi.BotAPI doesn't have an explicit Close method,
+	// but we can clear our rate limiter
+	c.rateLimiter = nil
+	return nil
+}
+
 // SendMessage sends a text message to the configured chat
-func (c *Client) SendMessage(message string) error {
+func (c *Client) SendMessage(ctx context.Context, message string) error {
 	// Wait for rate limiter
 	c.waitForRateLimit(c.chatID)
 
@@ -62,15 +71,22 @@ func (c *Client) SendMessage(message string) error {
 }
 
 // SendPhoto sends a photo with caption to the configured chat with retry mechanism
-func (c *Client) SendPhoto(photo io.Reader, caption string) error {
-	return c.SendPhotoWithRetry(photo, caption, 3, 5*time.Second)
+func (c *Client) SendPhoto(ctx context.Context, photo io.Reader, caption string) error {
+	return c.SendPhotoWithRetry(ctx, photo, caption, 3, 5*time.Second)
 }
 
 // SendPhotoWithRetry sends a photo with caption to the configured chat with retry mechanism
-func (c *Client) SendPhotoWithRetry(photo io.Reader, caption string, maxRetries int, retryDelay time.Duration) error {
+func (c *Client) SendPhotoWithRetry(ctx context.Context, photo io.Reader, caption string, maxRetries int, retryDelay time.Duration) error {
 	var lastErr error
 	
 	for i := 0; i <= maxRetries; i++ {
+		// Check if context was cancelled
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+		
 		// Wait for rate limiter
 		c.waitForRateLimit(c.chatID)
 		
@@ -88,7 +104,12 @@ func (c *Client) SendPhotoWithRetry(photo io.Reader, caption string, maxRetries 
 		
 		// If we have more retries, wait before trying again
 		if i < maxRetries {
-			time.Sleep(retryDelay)
+			// Wait for retry delay or until context is cancelled
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(retryDelay):
+			}
 		}
 	}
 	

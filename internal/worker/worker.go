@@ -109,8 +109,14 @@ func (wp *WorkerPool) worker(ctx context.Context, workerID int) {
 			
 			wp.log.Debug("Worker %d processing camera %s", workerID, job.CameraIP)
 			
+			// Create a context with timeout for this camera processing
+			processCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+			
 			// Process the camera
-			err := wp.processCamera(ctx, job.CameraIP)
+			err := wp.processCamera(processCtx, job.CameraIP)
+			
+			// Cancel the context when done
+			cancel()
 			
 			// Send result
 			result := Result{
@@ -187,9 +193,9 @@ func (wp *WorkerPool) processCamera(ctx context.Context, cameraIP string) error 
 	// Capture frame with retry logic and circuit breaker
 	var jpegData []byte
 	captureErr := cb.Execute(func() error {
-		return retry.WithRetry(retry.DefaultConfig(), func() error {
+		return retry.WithRetry(ctx, retry.DefaultConfig(), func() error {
 			var err error
-			jpegData, err = wp.capture.CaptureFrame(cameraIP, wp.cfg.RTSPUsername.Value(), wp.cfg.RTSPPassword.Value(), options)
+			jpegData, err = wp.capture.CaptureFrame(ctx, cameraIP, wp.cfg.RTSPUsername.Value(), wp.cfg.RTSPPassword.Value(), options)
 			return err
 		})
 	})
@@ -229,14 +235,14 @@ func (wp *WorkerPool) processCamera(ctx context.Context, cameraIP string) error 
 	}
 
 	// Send image to Telegram with retry logic
-	telegramErr := retry.WithRetry(retry.Config{
+	telegramErr := retry.WithRetry(ctx, retry.Config{
 		MaxRetries:    3,
 		InitialDelay:  2 * time.Second,
 		MaxDelay:      30 * time.Second,
 		Multiplier:    2.0,
 		Jitter:        1 * time.Second,
 	}, func() error {
-		return wp.telegram.SendPhoto(strings.NewReader(string(processedImage.Data)), wp.telegram.FormatCameraMessage(telegram.CameraInfo{
+		return wp.telegram.SendPhoto(ctx, strings.NewReader(string(processedImage.Data)), wp.telegram.FormatCameraMessage(telegram.CameraInfo{
 			IP:          cameraIP,
 			CaptureTime: time.Now(),
 			Metadata: map[string]string{

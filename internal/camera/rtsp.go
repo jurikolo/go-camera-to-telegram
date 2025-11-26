@@ -2,6 +2,7 @@
 package camera
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -115,7 +116,7 @@ func (r *RTSPClient) Disconnect() error {
 }
 
 // CaptureFrame captures a single frame from the RTSP stream
-func (r *RTSPClient) CaptureFrame() ([]byte, error) {
+func (r *RTSPClient) CaptureFrame(ctx context.Context) ([]byte, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	
@@ -130,6 +131,8 @@ func (r *RTSPClient) CaptureFrame() ([]byte, error) {
 	
 	for {
 		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		case <-timeout:
 			return nil, fmt.Errorf("timeout waiting for video frame from RTSP camera at %s", r.host)
 		case <-ticker.C:
