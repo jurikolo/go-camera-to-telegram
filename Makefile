@@ -12,11 +12,13 @@ BINARY_UNIX=$(BINARY_NAME)_unix
 
 # Build for current platform
 build:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/scanner
+	$(GOBUILD) -tags 'netgo osusergo' -a -installsuffix cgo -o $(BINARY_NAME) -v ./cmd/scanner
 
 # Build for Raspberry Pi (ARM)
 build-pi:
-	GOOS=linux GOARCH=arm64 $(GOBUILD) -o $(BINARY_NAME)-arm64 -v ./cmd/scanner
+	@echo "Building for Raspberry Pi (ARM64)..."
+	@echo "Note: CGO is disabled to avoid cross-compilation issues"
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 $(GOBUILD) -tags 'netgo osusergo' -a -installsuffix cgo -o $(BINARY_NAME)-arm64 -v ./cmd/scanner
 
 # Install dependencies
 deps:
@@ -34,19 +36,19 @@ clean:
 
 # Run the application
 run:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/scanner
+	$(GOBUILD) -tags 'netgo osusergo' -a -installsuffix cgo -o $(BINARY_NAME) -v ./cmd/scanner
 	./$(BINARY_NAME)
 
 # Install the binary
 install:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/scanner
+	$(GOBUILD) -tags 'netgo osusergo' -a -installsuffix cgo -o $(BINARY_NAME) -v ./cmd/scanner
 	sudo cp $(BINARY_NAME) /usr/local/bin/
 
 # Help
 help:
 	@echo "Available commands:"
 	@echo "  build        - Build for current platform"
-	@echo "  build-pi     - Build for Raspberry Pi (ARM64)"
+	@echo "  build-pi     - Build for Raspberry Pi (ARM64) with CGO disabled"
 	@echo "  deps         - Install dependencies"
 	@echo "  test         - Run tests"
 	@echo "  clean        - Clean build artifacts"

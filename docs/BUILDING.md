@@ -82,13 +82,13 @@ If you prefer to build manually without Make:
 ### Build for Current Platform
 
 ```bash
-go build -o scanner ./cmd/scanner
+go build -tags 'netgo osusergo' -a -installsuffix cgo -o scanner ./cmd/scanner
 ```
 
 ### Build for Raspberry Pi
 
 ```bash
-GOOS=linux GOARCH=arm64 go build -o scanner-arm64 ./cmd/scanner
+GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -a -installsuffix cgo -o scanner-arm64 ./cmd/scanner
 ```
 
 ### Run Tests
@@ -186,6 +186,65 @@ If you encounter permission issues when installing:
 sudo make install
 ```
 
+### Cross-Compilation Issues
+### Clearing Module Cache
+
+If you encounter persistent build issues, try clearing the Go module cache:
+
+```bash
+go clean -modcache
+go mod tidy
+```
+
+This will remove all cached modules and re-download them, which can help resolve conflicts.
+
+If you encounter errors like "defined in both Go and assembly" when cross-compiling for ARM architectures, make sure to set `CGO_ENABLED=0`:
+
+```bash
+GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o scanner-arm64 ./cmd/scanner
+### Raspberry Pi Specific Issues
+
+If you're still encountering build errors on Raspberry Pi even after setting `CGO_ENABLED=0`, try these additional steps:
+
+1. **Clear the Go module cache**:
+   ```bash
+   go clean -modcache
+   go mod tidy
+   ```
+
+2. **Use build tags to exclude problematic code**:
+   ```bash
+   go build -tags 'netgo osusergo' -o scanner ./cmd/scanner
+   ```
+
+3. **For cross-compilation, ensure you're using the correct flags**:
+   ```bash
+   GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -a -installsuffix cgo -o scanner-arm64 ./cmd/scanner
+   ```
+
+4. **If you're building directly on Raspberry Pi and still having issues, try updating Go**:
+   ```bash
+   # Remove old Go installation
+   sudo rm -rf /usr/local/go
+   # Download and install the latest version
+6. **Use build tags to exclude problematic code**:
+   ```bash
+   go build -tags 'netgo osusergo' -o scanner ./cmd/scanner
+   ```
+   These tags force the use of Go's pure Go implementations for networking and user operations, which can help avoid conflicts with assembly implementations.
+   wget https://go.dev/dl/go1.21.5.linux-arm64.tar.gz
+   sudo tar -C /usr/local -xzf go1.21.5.linux-arm64.tar.gz
+   export PATH=$PATH:/usr/local/go/bin
+   ```
+
+5. **Check for conflicting Go installations**:
+   ```bash
+   which go
+   go version
+   ```
+```
+
+This disables CGO which can cause conflicts during cross-compilation.
 ### Cross-Compilation Issues
 
 If cross-compilation fails, ensure you have the necessary toolchain installed for the target platform.
