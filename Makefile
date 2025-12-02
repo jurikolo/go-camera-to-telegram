@@ -18,7 +18,7 @@ build:
 build-pi:
 	@echo "Building for Raspberry Pi (ARM64)..."
 	@echo "Note: CGO is disabled to avoid cross-compilation issues"
-	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 $(GOBUILD) -tags 'netgo osusergo' -a -installsuffix cgo -o $(BINARY_NAME)-arm64 -v ./cmd/scanner
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 GOARM=7 $(GOBUILD) -tags 'purego nowasm noasm' -o $(BINARY_NAME)-arm64 ./cmd/scanner
 
 # Install dependencies
 deps:
