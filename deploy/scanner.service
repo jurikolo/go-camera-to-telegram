@@ -1,0 +1,19 @@
+[Unit]
+Description=IP Camera Scanner with Telegram Integration
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/go-camera-to-telegram
+ExecStart=/home/pi/go-camera-to-telegram/scanner
+Restart=always
+RestartSec=10
+Environment=TELEGRAM_BOT_TOKEN=your_bot_token_here
+Environment=TELEGRAM_CHAT_ID=your_chat_id_here
+Environment=NETWORK_CIDR=192.168.1.0/24
+
+[Install]
+WantedBy=multi-user.target
